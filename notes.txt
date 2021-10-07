@@ -1,0 +1,22 @@
+use smote for oversampling the underepresenting
+start pandas profiling
+drop attributes that are highly correlated with each other, as they are redundant and may cause overfitting (>80%, >90%, >95%?)
+attributes with very low correlations can probably be left alone
+
+how much does any given attribute actually affect your performance (feature selection)
+    drop random attributes and see if it improves the model or not
+
+things to look into using
+stratify()
+sklearn grid search
+
+normalization must be done before variance thresholding
+
+[ ] write/draw a pipeline for processing, training, predicting, etc.
+    with loop back arrows
+
+for data prep steps with thresholds which are a bit ambiguous make the threshold variable a hyperparameter
+
+input hyperparameter as command line arguments (unless you wanna do a hyperparameter grid search)
+
+pca for reducing dimensionality
