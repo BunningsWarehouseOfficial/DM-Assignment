@@ -1,22 +1,25 @@
-use smote for oversampling the underepresenting
-start pandas profiling
-drop attributes that are highly correlated with each other, as they are redundant and may cause overfitting (>80%, >90%, >95%?)
-attributes with very low correlations can probably be left alone
+[x] Drop numeric attributes that are highly correlated with each other, as they are redundant and may cause overfitting (>80%, >90%, >95%?)
+[ ] Drop, or at least view, correlation matrix for categorical attributes
+[ ] Drop highly correlated attributes below threshold first if doing 'manual' attribute selection?
 
 how much does any given attribute actually affect your performance (feature selection)
     drop random attributes and see if it improves the model or not
 
-things to look into using
-stratify()
-sklearn grid search
+Things to look into using
+- stratify
+	https://stackoverflow.com/questions/34842405/parameter-stratify-from-method-train-test-split-scikit-learn
+- sklearn grid search
 
-normalization must be done before variance thresholding
+- for data prep steps with thresholds which are a bit ambiguous make the threshold variable a hyperparameter
+- input hyperparameter as command line arguments (unless you wanna do a hyperparameter grid search)
 
-[ ] write/draw a pipeline for processing, training, predicting, etc.
-    with loop back arrows
+[ ] PCA for reducing dimensionality (normalise first) - test with different target num attributes, choose best
 
-for data prep steps with thresholds which are a bit ambiguous make the threshold variable a hyperparameter
+[ ] Use SMOTE for oversampling the underepresented classes
 
-input hyperparameter as command line arguments (unless you wanna do a hyperparameter grid search)
+[ ] declaration of originality (ensure that submission date is correct)
+[ ] don't include Git components in submission 😬
 
-pca for reducing dimensionality
+=== REPORT ===
+[ ] Include references to helpful articles/documentation (only 1 mark!)
+[ ] Include *small* code snippets, thoroughly explained in text, for data prep automated segments (maybe)
