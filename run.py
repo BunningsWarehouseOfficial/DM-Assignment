@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import GridSearchCV
@@ -178,8 +178,20 @@ y_test  = y[-100:]
 """MODEL SELECTION"""
 skf = StratifiedKFold(n_splits=9)  # 9 splits for 100 samples per fold
 
+def show_results(grid_search):
+    best_model = grid_search.best_estimator_
+    print("Best accuracy:", grid_search.best_score_)
+    accuracy = np.mean(grid_search.cv_results_['mean_test_accuracy'])
+    f1       = np.mean(grid_search.cv_results_['mean_test_f1'])
+    print("Best accuracy average:", accuracy)
+    print("Best f1-score average:", f1)
+    model_score = {'model' : best_model, 'score' : comparison_score(accuracy, f1)}
+    print("Best parameters:", grid_search.best_params_)
+    print("Best classifier:", best_model, '\n')
+    return model_score
 
-print("=== K-nearest Neighbors Classifier ===")
+
+print("=== Training K-nearest Neighbors Classifier... ===")
 k_range = list(range(kmin, kmax + 1, 2))
 params = {
     'model__n_neighbors' : k_range,
@@ -196,19 +208,10 @@ pipeline = Pipeline([('smote', smote), ('model', model)])
 grid_search = GridSearchCV(pipeline, param_grid=params, cv=skf, return_train_score=True,
                            scoring=['accuracy', 'f1'], refit='accuracy')
 grid_search.fit(x_train, y_train)
-
-best_kNN = grid_search.best_estimator_
-print("Best accuracy:", grid_search.best_score_)
-accuracy = np.mean(grid_search.cv_results_['mean_test_accuracy'])
-f1       = np.mean(grid_search.cv_results_['mean_test_f1'])
-print("Best accuracy average:", accuracy)
-print("Best f1-score average:", f1)
-knn_score = {'model' : best_kNN, 'score' : comparison_score(accuracy, f1)}
-print("Best parameters:", grid_search.best_params_)
-print("Best classifier:", best_kNN, '\n')
+knn_score = show_results(grid_search)
 
 
-print("=== Decision Tree Classifier ===")
+print("=== Decision Tree Classifier... ===")
 min_samples_leaf_range = list(range(min_samples_min, min_samples_max + 1))
 params = {
     'model__criterion'        : ['gini', 'entropy'],
@@ -225,19 +228,10 @@ pipeline = Pipeline([('smote', smote), ('model', model)])
 grid_search = GridSearchCV(pipeline, param_grid=params, cv=skf, return_train_score=True,
                            scoring=['accuracy', 'f1'], refit='accuracy')
 grid_search.fit(x_train, y_train)
-
-best_decision_tree = grid_search.best_estimator_
-print("Best accuracy:", grid_search.best_score_)
-accuracy = np.mean(grid_search.cv_results_['mean_test_accuracy'])
-f1       = np.mean(grid_search.cv_results_['mean_test_f1'])
-print("Best accuracy average:", accuracy)
-print("Best f1-score average:", f1)
-decision_tree_score = {'model' : best_decision_tree, 'score' : comparison_score(accuracy, f1)}
-print("Best parameters:", grid_search.best_params_)
-print("Best classifier:", best_decision_tree, '\n')
+decision_tree_score = show_results(grid_search)
 
 
-print("=== Naive Bayes Classifier ===")
+print("=== Training Naive Bayes Classifier... ===")
 params = {
     'model__var_smoothing' : [1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0]
 }
@@ -251,29 +245,44 @@ pipeline = Pipeline([('smote', smote), ('model', model)])
 grid_search = GridSearchCV(pipeline, param_grid=params, cv=skf, return_train_score=True,
                            scoring=['accuracy', 'f1'], refit='accuracy')
 grid_search.fit(x_train, y_train)
+bayes_score = show_results(grid_search)
 
-best_naive_bayes = grid_search.best_estimator_
-print("Best accuracy:", grid_search.best_score_)
-accuracy = np.mean(grid_search.cv_results_['mean_test_accuracy'])
-f1       = np.mean(grid_search.cv_results_['mean_test_f1'])
-print("Best accuracy average:", accuracy)
-print("Best f1-score average:", f1)
-bayes_score = {'model' : best_naive_bayes, 'score' : comparison_score(accuracy, f1)}
-print("Best parameters:", grid_search.best_params_)
-print("Best classifier:", best_naive_bayes, '\n')
+
+print("=== Training Multi-layer Perceptron Classifier... ===")
+params = {
+    'model__hidden_layer_sizes' : [(100), (100,100), (100,100,100)],
+    'model__activation'         : ['tanh', 'relu'],
+    'model__solver'             : ['lbfgs', 'sgd', 'adam'],
+    'model__alpha'              : [1e-4, 1e-3]
+}
+
+#pca = PCA()
+smote = SMOTE(random_state=seed, sampling_strategy=1.0)  # Oversampling minority class to match majority class
+model = MLPClassifier(random_state=seed, max_iter=3000, learning_rate='constant')
+pipeline = Pipeline([('smote', smote), ('model', model)])
+#pipeline = Pipeline([('pca', pca), ('smote', smote), ('model', model)])
+
+import time
+start_time = time.time()
+grid_search = GridSearchCV(pipeline, param_grid=params, cv=skf, return_train_score=True, n_jobs=-1,  # Using all cores
+                           scoring=['accuracy', 'f1'], refit='accuracy', verbose=2)
+grid_search.fit(x_train, y_train)
+mlp_score = show_results(grid_search)
+print(f"MLP Training: {time.time() - start_time} seconds")
 
 
 # Select the two best models for the final prediction
 scores = [
     {'name' : "knn",           'result' : knn_score},
     {'name' : "decision_tree", 'result' : decision_tree_score },
-    {'name' : "naive_bayes",   'result' : bayes_score}
+    {'name' : "naive_bayes",   'result' : bayes_score},
+    {'name' : "mlp",           'result' : mlp_score}
 ]
 
 score = lambda x : x['result']['score']
 scores.sort(reverse=True, key=score)
 
-print("- Model Comparison Scores")
+print("- Model Comparison Scores -")
 ii = 1
 for x in scores:
     print(str(ii) + '.', str(score(x)) + ':', x['name'])
