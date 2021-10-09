@@ -38,6 +38,9 @@ None  # The var_smoothing parameter is still tuned
 # Model comparison score formula
 comparison_score = lambda accuracy, f1 : (2 * accuracy + 1 * f1) / 3
 
+# Verbosity of MLP classifier training: either 0 or 2 are preferred for no output or verbose output respectively
+mlp_verbosity = 2
+
 
 """DATA PREPARATION"""
 data = pd.read_csv("data2021.student.csv", delimiter=',', header=[0])  # No attributes
@@ -265,7 +268,7 @@ pipeline = Pipeline([('smote', smote), ('model', model)])
 import time
 start_time = time.time()
 grid_search = GridSearchCV(pipeline, param_grid=params, cv=skf, return_train_score=True, n_jobs=-1,  # Using all cores
-                           scoring=['accuracy', 'f1'], refit='accuracy', verbose=2)
+                           scoring=['accuracy', 'f1'], refit='accuracy', verbose=mlp_verbosity)
 grid_search.fit(x_train, y_train)
 mlp_score = show_results(grid_search)
 print(f"MLP Training: {time.time() - start_time} seconds")
