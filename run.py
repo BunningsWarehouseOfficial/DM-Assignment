@@ -204,7 +204,7 @@ params = {
 
 #pca = PCA()
 smote = SMOTE(random_state=seed, sampling_strategy=1.0)  # Oversampling minority class to match majority class
-model = KNeighborsClassifier(n_neighbors=3)
+model = KNeighborsClassifier()
 pipeline = Pipeline([('smote', smote), ('model', model)])
 #pipeline = Pipeline([('pca', pca), ('smote', smote), ('model', model)])
 
